@@ -110,7 +110,7 @@
     "baseUrl": "./src",
     "paths": {
         "@db/*": ["db/*"],
-        "@api/*": ["api/*"],
+        "@graphql/*": ["graphql/*"],
         "@utils/*": ["utils/*"]
     }
   }
