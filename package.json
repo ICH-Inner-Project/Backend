@@ -4,6 +4,9 @@
   "description": "Chatty backend",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
+    "prod": "node dist/index.js",
+    "dev": "nodemon src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -33,6 +36,8 @@
     "@types/express": "^5.0.0",
     "@types/express-jwt": "^6.0.4",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/mongoose": "^5.11.96"
+    "@types/mongoose": "^5.11.96",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
   }
 }

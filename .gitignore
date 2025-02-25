@@ -10,7 +10,6 @@ build/
 # Environment variables
 middleware/conspect.txt
 .env
-package-lock.json
 # OS specific files
 .DS_Store
 Thumbs.db
