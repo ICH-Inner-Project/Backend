@@ -1,0 +1,14 @@
+PORT=3333
+JWT_SECRET=c79555a57fa0b57f4c04d102447d301cd41b2277dbec87e3fe0c382ca96bbf68
+MONGO_URI=mongodb+srv://cluster0.gd3yo.mongodb.net
+DB_USER=olhalazyniuk
+DB_PASS=BVN6h2sjUHQsxi1R
+DB_NAME=instack
+EMAIL_USER= 'olhalazyniuk@gmail.com'
+PASS_USER = 'ejkw ptdv kxcy gpiq'
+
+URI_RESET=http://localhost:5173
+
+CLOUDINARY_CLOUD_NAME='drwrhviwk'
+CLOUDINARY_API_KEY= 995975495841296
+CLOUDINARY_API_SECRET='nfYQUa1uHg-vLTF4EigkpYXOxAQ'
