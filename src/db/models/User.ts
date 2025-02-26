@@ -1,3 +1,5 @@
+import { hashPassword } from "@utils/bcrypt";
+
 import { Schema, model, Document, Types } from 'mongoose';
 
 export enum Roles {
@@ -29,6 +31,11 @@ const userSchema = new Schema<IUser>({
   role: { type: String, trim: true, required: true },
 }, {
     timestamps: true,
+});
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await hashPassword(this.password);
 });
 
 export const User = model<IUser>('User', userSchema);
