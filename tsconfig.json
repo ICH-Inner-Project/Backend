@@ -112,6 +112,7 @@
         "@db/*": ["db/*"],
         "@graphql/*": ["graphql/*"],
         "@utils/*": ["utils/*"]
-    }
+    },
+    "outDir": "./dist"
   }
 }
