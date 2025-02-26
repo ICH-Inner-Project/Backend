@@ -35,7 +35,13 @@ const userSchema = new Schema<IUser>({
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await hashPassword(this.password);
+
+  try {
+    this.password = await hashPassword(this.password);
+    return next();
+  } catch (err) {
+    return next(err as Error);
+  }
 });
 
 export const User = model<IUser>('User', userSchema);
