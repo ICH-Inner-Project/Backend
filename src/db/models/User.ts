@@ -1,17 +1,22 @@
-import { Schema, model, Document } from 'mongoose';
-import { hashPassword, comparePassword } from '../../utils/bcrypt';
+import { hashPassword } from "@utils/bcrypt";
 
-interface IUser extends Document {
+import { Schema, model, Document, Types } from 'mongoose';
+
+export enum Roles {
+    user = "user",
+    admin = "admin",
+}
+
+export interface IUser extends Document {
   username: string;
   password: string;
   phone: string;
   birthday: Date;
   gender: string;
-  name: string;
-  posts: string[];
-  admin: boolean;
-  createAt: Date;
-  comparePassword(password: string): Promise<boolean>;
+  firstName: string;
+  lastName: string;
+  posts: Types.ObjectId[];
+  role: string;
 }
 
 const userSchema = new Schema<IUser>({
@@ -20,24 +25,24 @@ const userSchema = new Schema<IUser>({
   phone: { type: String, trim: true, required: true },
   birthday: { type: Date, trim: true, required: true },
   gender: { type: String, trim: true, required: true },
-  name: { type: String, trim: true, required: true },
-  posts: [{ type: String, required: true }],
-  admin: { type: Boolean, required: true },
-  createAt: {
-    type: Date,
-    default: Date.now,
-  },
+  firstName: { type: String, trim: true, required: true },
+  lastName: { type: String, trim: true, required: true },
+  posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
+  role: { type: String, trim: true, required: true },
+}, {
+    timestamps: true,
 });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await hashPassword(this.password);
+
+  try {
+    this.password = await hashPassword(this.password);
+    return next();
+  } catch (err) {
+    return next(err as Error);
+  }
 });
 
-userSchema.methods.comparePassword = async function (password: string) {
-  return await comparePassword(password, this.password);
-};
+export const User = model<IUser>('User', userSchema);
 
-const User = model<IUser>('User', userSchema);
-
-export default User;
