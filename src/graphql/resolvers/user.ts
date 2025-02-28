@@ -27,7 +27,7 @@ export const userResolver: IResolvers = {
       }
     },
     me: async (_: any, __: any, context: any) => {
-      const user = await User.findById(context.user.userId);
+      const user = await User.findById(context.user.id);
       return user;
     },
   },
@@ -49,7 +49,8 @@ export const userResolver: IResolvers = {
           throw new Error('Invalid password');
         }
 
-        const token = generateToken(user.id, user.role);
+        const token = generateToken({ id: user.id, role: user.role }, '1d');
+
         return {
           user,
           token,
@@ -106,7 +107,7 @@ export const userResolver: IResolvers = {
         userObject.id = user.id;
         delete userObject._id;
 
-        const token = generateToken(user.id, user.role);
+        const token = generateToken({ id: user.id, role: user.role }, '1d');
         // console.log(userObject, 'userObject');
         return userObject;
       } catch (error) {

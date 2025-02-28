@@ -45,7 +45,7 @@ export function requireSelfOrAdminDirective(directiveName: string) {
                 throw new Error('Not authorized. Please log in.');
               }
 
-              if (user.role !== Roles.admin && user.userId !== args.id) {
+              if (user.role !== Roles.admin && user.id !== args.id) {
                 throw new Error(
                   'Access denied. You can only modify your own data or admin data.'
                 );
