@@ -4,7 +4,7 @@ import 'dotenv/config';
 
 const { ruruHTML } = require('ruru/server');
 
-import fullHandler from "@graphql/handler";
+import fullHandler from '@graphql/handler';
 import connectDB from '@db/init';
 
 connectDB();
@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
 app.all('/graphql', fullHandler);
 
@@ -24,4 +25,3 @@ app.get('/', (_req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port http://localhost:${PORT}`);
 });
-
