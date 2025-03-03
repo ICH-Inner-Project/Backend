@@ -1,40 +1,48 @@
 import { IResolvers } from '@graphql-tools/utils';
 import { Post } from '@db/models/Post';
+import { Types } from 'mongoose';
 import { validatePostData } from '@utils/validate';
-import { uploadImage } from '@utils/uploadImage';
-import { verifyToken } from '@utils/jwt';
+import { handleImageUpload } from '@utils/uploadImage';
 
 export const postResolver: IResolvers = {
   Query: {
-    async getPost(_, { id }) {
-      // Получение одного поста по id
-      return await Post.findById(id);
+    async getPost(_, { id }, context) {
+      console.log(context);
+      if (!Types.ObjectId.isValid(id)) {
+        throw new Error('Invalid ID format');
+      }
+
+      const post = await Post.findById(id);
+      if (!post) {
+        throw new Error('Post not found');
+      }
+
+      return post;
     },
 
     async listPosts(
       _,
       { limit = 10, offset = 0, onlyMine, excludeMine, sort },
-      { authToken }
+      context
     ) {
-      const user = verifyToken(authToken); // Проверка авторизации
-
       const filter: any = {};
 
-      // Фильтрация постов
-      if (onlyMine && user) filter.authorId = user.id;
-      if (excludeMine && user) filter.authorId = { $ne: user.id };
+      // Используем context.user.id для фильтрации постов по автору
+      if (onlyMine && context.user.id) {
+        filter.authorId = context.user.id; // Отображать только посты текущего пользователя
+      }
 
-      // Основной запрос
-      const posts = await Post.find(filter)
-        .sort(sort === 'new' ? { createdAt: -1 } : { createdAt: 1 }) // Сортировка по дате
-        .skip(offset) // Пропуск данных по offset
-        .limit(limit); // Ограничение на количество постов
+      if (excludeMine && context.user.id) {
+        filter.authorId = { $ne: context.user.id }; // Исключить посты текущего пользователя
+      }
 
-      return posts;
+      return await Post.find(filter)
+        .sort(sort === 'new' ? { createdAt: -1 } : { createdAt: 1 })
+        .skip(offset)
+        .limit(limit);
     },
 
     async searchPosts(_, { query }) {
-      // Поиск постов по заголовку или контенту
       return await Post.find({
         $or: [
           { title: { $regex: query, $options: 'i' } },
@@ -42,59 +50,103 @@ export const postResolver: IResolvers = {
         ],
       });
     },
+
+    async randomPosts(_, { n, onlyMine }, context) {
+      if (!n || n <= 0) throw new Error("Parameter 'n' must be greater than 0");
+
+      const filter: any = {};
+      if (onlyMine && context?.user?.id) {
+        filter.authorId = context.user.id;
+      }
+
+      const posts = await Post.aggregate([
+        { $match: filter },
+        { $sample: { size: n } },
+        {
+          $project: {
+            id: '$_id', 
+            title: 1,
+            content: 1,
+            authorId: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            publishedAt: 1,
+            image: 1,
+          },
+        },
+      ]);
+
+      return posts;
+    },
+
+    async userPosts(_, __, context) {
+      if (!context.user.id) throw new Error('Unauthorized');
+      return await Post.find({ authorId: context.user.id });
+    },
   },
 
   Mutation: {
-    async createPost(_, { title, content, image, publishedAt }, { authToken }) {
-      const user = verifyToken(authToken);
-      if (!user) throw new Error('Unauthorized');
+    async createPost(
+      _,
+      { title, content, image, publishedAt, description },
+      context
+    ) {
+      if (!context.user || !context.user.id) {
+        console.log(context.user);
+        throw new Error('Unauthorized');
+      }
 
-      validatePostData(title, content);
+      // Валидация данных
+      validatePostData(title, content,description);
 
-      const imageUrl = image ? await uploadImage(image) : null;
+      // Обработка изображения
+      // const imageUrl = image ? await handleImageUpload(image) : null;
+      const imageUrl = image ? image : null;
 
       return await new Post({
         title,
         content,
-        authorId: user.id,
-        image: imageUrl, 
+        authorId: context.user.id,
+        image: imageUrl,
         publishedAt: publishedAt ? new Date(publishedAt) : null,
+        description: description,
       }).save();
     },
 
     async updatePost(
       _,
-      { id, title, content, image, publishedAt },
-      { authToken }
+      { id, title, content, image, publishedAt, description },
+      context
     ) {
-      const user = verifyToken(authToken);
-      if (!user) {
-        throw new Error('User is not authorized');
-      }
+      if (!context.user.id) throw new Error('User is not authorized');
+
       const post = await Post.findById(id);
 
-      if (!post || post.authorId.toString() !== user.id) {
+      if (!post || post.authorId.toString() !== context.user.id) {
         throw new Error('Permission denied');
       }
-
-      const imageUrl = image ? await uploadImage(image) : post.image;
-
+      validatePostData(title, content, description);
+      // const imageUrl = image ? await handleImageUpload(image) : post.image;
+      const imageUrl = image ? image : null;
       return await Post.findByIdAndUpdate(
         id,
-        { title, content, image: imageUrl, publishedAt },
+        {
+          title,
+          content,
+          image: imageUrl,
+          publishedAt,
+          description,
+        },
         { new: true }
       );
     },
 
-    async deletePost(_, { id }, { authToken }) {
-      const user = verifyToken(authToken);
-      if (!user) {
-        throw new Error('User is not authorized');
-      }
+    async deletePost(_, { id }, context) {
+      if (!context.user.id) throw new Error('User is not authorized');
 
-      const post = await Post.findById(id).lean();
+      const post = await Post.findById(id);
 
-      if (!post || post.authorId.toString() !== user.id) {
+      if (!post || post.authorId.toString() !== context.user.id) {
         throw new Error('Permission denied');
       }
 

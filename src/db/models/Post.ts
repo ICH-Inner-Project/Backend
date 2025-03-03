@@ -22,5 +22,5 @@ const postSchema = new Schema<IPost>(
   }
 );
 
-export const Post = model<IPost>('Post', postSchema);
+export const Post = model<IPost>('PostChatty', postSchema);
 

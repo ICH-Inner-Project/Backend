@@ -2,6 +2,8 @@ type Post {
   id: ID!
   title: String!
   content: String!
+  description: String!
+  image: String!
   authorId: ID!
   createdAt: String!
   updatedAt: String!
@@ -10,7 +12,13 @@ type Post {
 
 type Query {
   getPost(id: ID!): Post
-  listPosts(limit: Int, offset: Int): [Post!]!
+  listPosts(
+    limit: Int
+    offset: Int
+    onlyMine: Boolean
+    excludeMine: Boolean
+    sort: String
+  ): [Post!]!
   randomPosts(n: Int!, onlyMine: Boolean): [Post!]!
   searchPosts(query: String!): [Post!]!
   userPosts(userId: ID!): [Post!]!
@@ -18,16 +26,19 @@ type Query {
 
 type Mutation {
   createPost(
-    title: String!,
-    content: String!,
+    title: String!
+    content: String!
+    description: String!
     publishedAt: String
+    image: String!
   ): Post!
   updatePost(
-    id: ID!,
-    title: String,
-    content: String,
+    id: ID!
+    title: String
+    content: String
+    description: String
     publishedAt: String
+    image: String
   ): Post!
   deletePost(id: ID!): Boolean!
 }
-
