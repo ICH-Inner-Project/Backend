@@ -101,7 +101,7 @@ export const postResolver: IResolvers = {
 
       // Обработка изображения
       // const imageUrl = image ? await handleImageUpload(image) : null;
-      const imageUrl = image ? image : null;
+      const imageUrl = image ? image : '';
 
       return await new Post({
         title,
@@ -127,7 +127,7 @@ export const postResolver: IResolvers = {
       }
       validatePostData(title, content, description);
       // const imageUrl = image ? await handleImageUpload(image) : post.image;
-      const imageUrl = image ? image : null;
+      const imageUrl = image ? image : '';
       return await Post.findByIdAndUpdate(
         id,
         {
