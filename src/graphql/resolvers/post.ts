@@ -1,4 +1,3 @@
-
 import { IResolvers } from '@graphql-tools/utils';
 import { Post, IPost } from '@db/models/Post';
 import { Types } from 'mongoose';
