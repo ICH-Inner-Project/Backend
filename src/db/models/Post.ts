@@ -1,7 +1,7 @@
 import { Schema, model, Document, Types} from 'mongoose';
 
 export interface IPost extends Document {
-
+ 
   title: string;
   description: string;
   content: string;
