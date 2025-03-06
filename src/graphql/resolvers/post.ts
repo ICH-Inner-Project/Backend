@@ -3,7 +3,11 @@ import { Post, IPost } from '@db/models/Post';
 import { Types } from 'mongoose';
 import { validatePostData } from '@utils/validate';
 import { handleImageUpload } from '@utils/uploadImage';
-import { addTimeToDate } from '@utils/dateUtils';
+import {
+  addTimeToDate,
+  isFuturePost,
+  filterAndFormatPosts,
+} from '@utils/dateUtils';
 
 interface Context {
   user?: { id: string };
@@ -65,6 +69,9 @@ export const postResolver: IResolvers = {
         throw new Error('Post not found');
       }
 
+      if (isFuturePost(post.publishedAt?.toISOString())) {
+        throw new Error('Post cannot be from the future');
+      }
       return post;
     },
 
@@ -89,19 +96,22 @@ export const postResolver: IResolvers = {
         filter.authorId = { $ne: context.user.id }; // Исключить посты текущего пользователя
       }
 
-      return await Post.find(filter)
+      const posts = await Post.find(filter)
         .sort(sort === 'new' ? { createdAt: -1 } : { createdAt: 1 })
         .skip(offset)
         .limit(limit);
+
+      return filterAndFormatPosts(posts);
     },
 
     async searchPosts(
       _: unknown,
       { query }: SearchPostsArgs
     ): Promise<IPost[]> {
-      return await Post.find({
+      const posts = await Post.find({
         $or: [{ title: { $regex: query, $options: 'i' } }],
       });
+       return filterAndFormatPosts(posts);
     },
 
     async randomPosts(
@@ -139,8 +149,10 @@ export const postResolver: IResolvers = {
         },
       ]);
 
-      console.log('Found posts:', posts);
-      return posts;
+      // console.log('Found posts:', posts);
+      const hydratedPosts = posts.map((post) => Post.hydrate(post));
+
+      return filterAndFormatPosts(hydratedPosts);
     },
 
     async userPosts(
@@ -149,7 +161,8 @@ export const postResolver: IResolvers = {
       context: Context
     ): Promise<IPost[]> {
       if (!context.user?.id) throw new Error('Unauthorized');
-      return await Post.find({ authorId: context.user.id });
+      const posts = await Post.find({ authorId: context.user.id });
+      return filterAndFormatPosts(posts);
     },
   },
 

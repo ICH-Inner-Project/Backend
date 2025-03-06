@@ -20,26 +20,27 @@ const postSchema = new Schema<IPost>(
     publishedAt: { type: Date, default: null },
   },
   {
-    timestamps: true,
-    toJSON: {
+    timestamps: true, 
+
+    toObject: {
       virtuals: true,
       transform(doc, ret) {
-        // Преобразуем дату перед отравкой
+       
         if (ret.publishedAt) {
           ret.publishedAt = format(
             new Date(ret.publishedAt),
             'yyyy-MM-dd HH:mm:ss'
           );
         }
-        return ret;
-      },
-    },
-    toObject: {
-      virtuals: true,
-      transform(doc, ret) {
-        if (ret.publishedAt) {
-          ret.publishedAt = format(
-            new Date(ret.publishedAt),
+        if (ret.createdAt) {
+          ret.createdAt = format(
+            new Date(ret.createdAt),
+            'yyyy-MM-dd HH:mm:ss'
+          );
+        }
+        if (ret.updatedAt) {
+          ret.updatedAt = format(
+            new Date(ret.updatedAt),
             'yyyy-MM-dd HH:mm:ss'
           );
         }
