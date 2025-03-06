@@ -132,12 +132,12 @@ export const postResolver: IResolvers = {
         }
       }
 
-      // Получаем текущую дату
+      
       const currentDate = new Date();
 
       const posts = await Post.aggregate([
         { $match: filter },
-        { $match: { publishedAt: { $lte: currentDate } } }, // фильтруем посты, опубликованные до текущей даты
+        { $match: { publishedAt: { $lte: currentDate } } },
         { $sample: { size: n } },
         {
           $project: {
@@ -153,10 +153,8 @@ export const postResolver: IResolvers = {
         },
       ]);
 
-      // Гидрируем посты, если необходимо
       const hydratedPosts = posts.map((post) => Post.hydrate(post));
 
-      // Преобразуем в формат, аналогичный фильтрации и форматированию
       return hydratedPosts.map((post) => post.toObject());
     },
 
