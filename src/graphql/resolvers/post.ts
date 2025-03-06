@@ -111,7 +111,7 @@ export const postResolver: IResolvers = {
       const posts = await Post.find({
         $or: [{ title: { $regex: query, $options: 'i' } }],
       });
-       return filterAndFormatPosts(posts);
+      return filterAndFormatPosts(posts);
     },
 
     async randomPosts(
@@ -132,8 +132,12 @@ export const postResolver: IResolvers = {
         }
       }
 
+      // Получаем текущую дату
+      const currentDate = new Date();
+
       const posts = await Post.aggregate([
         { $match: filter },
+        { $match: { publishedAt: { $lte: currentDate } } }, // фильтруем посты, опубликованные до текущей даты
         { $sample: { size: n } },
         {
           $project: {
@@ -149,10 +153,11 @@ export const postResolver: IResolvers = {
         },
       ]);
 
-      // console.log('Found posts:', posts);
+      // Гидрируем посты, если необходимо
       const hydratedPosts = posts.map((post) => Post.hydrate(post));
 
-      return filterAndFormatPosts(hydratedPosts);
+      // Преобразуем в формат, аналогичный фильтрации и форматированию
+      return hydratedPosts.map((post) => post.toObject());
     },
 
     async userPosts(
