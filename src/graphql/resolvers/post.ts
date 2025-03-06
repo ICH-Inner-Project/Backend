@@ -3,6 +3,8 @@ import { Post, IPost } from '@db/models/Post';
 import { Types } from 'mongoose';
 import { validatePostData } from '@utils/validate';
 import { handleImageUpload } from '@utils/uploadImage';
+import { addTimeToDate } from '@utils/dateUtils';
+
 interface Context {
   user?: { id: string };
 }
@@ -74,6 +76,11 @@ export const postResolver: IResolvers = {
       const filter: Record<string, any> = {};
 
       // Используем context.user.id для фильтрации постов по автору
+      if (onlyMine && excludeMine) {
+        throw new Error(
+          'Only one option of onlyMine and excludeMine should be true'
+        );
+      }
       if (onlyMine && context.user?.id) {
         filter.authorId = context.user.id; // Отображать только посты текущего пользователя
       }
@@ -93,10 +100,7 @@ export const postResolver: IResolvers = {
       { query }: SearchPostsArgs
     ): Promise<IPost[]> {
       return await Post.find({
-        $or: [
-          { title: { $regex: query, $options: 'i' } },
-          { content: { $regex: query, $options: 'i' } },
-        ],
+        $or: [{ title: { $regex: query, $options: 'i' } }],
       });
     },
 
@@ -160,17 +164,22 @@ export const postResolver: IResolvers = {
       }
 
       validatePostData(title, content, description);
-      // const imageUrl = image ? await handleImageUpload(image) : '';
       const imageUrl = image || '';
 
-      return await new Post({
+      const fullPublishedAt = publishedAt
+        ? addTimeToDate(publishedAt)
+        : undefined;
+
+      const post = await new Post({
         title,
         content,
         authorId: context.user.id,
         image: imageUrl,
-        publishedAt: publishedAt ? new Date(publishedAt) : null,
+        publishedAt: fullPublishedAt,
         description,
       }).save();
+
+      return post.toObject();
     },
 
     async updatePost(
@@ -186,14 +195,27 @@ export const postResolver: IResolvers = {
       }
 
       validatePostData(title, content, description);
-      // const imageUrl = image ? await handleImageUpload(image) : post.image;
-      const imageUrl = image || post.image;
 
-      return await Post.findByIdAndUpdate(
+      const imageUrl = image || post.image;
+      const fullPublishedAt = publishedAt
+        ? addTimeToDate(publishedAt)
+        : post.publishedAt;
+
+      const updatedPost = await Post.findByIdAndUpdate(
         id,
-        { title, content, image: imageUrl, publishedAt, description },
+        {
+          title,
+          content,
+          image: imageUrl,
+          publishedAt: fullPublishedAt,
+          description,
+        },
         { new: true }
       );
+
+      if (!updatedPost) throw new Error('Post update failed');
+
+      return updatedPost.toObject();
     },
 
     async deletePost(
