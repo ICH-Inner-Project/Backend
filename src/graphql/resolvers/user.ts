@@ -2,8 +2,10 @@ import { IResolvers } from '@graphql-tools/utils';
 import { generateToken } from '@utils/jwt';
 import { comparePassword } from '@utils/bcrypt';
 import { User, IUser } from '@db/models/User';
+import { GraphQLUpload, FileUpload } from 'graphql-upload-ts';
 
 import nodemailer from 'nodemailer';
+import { handleImageUpload } from '@utils/uploadImage';
 
 type AuthPayload = {
   token: string;
@@ -11,6 +13,7 @@ type AuthPayload = {
 };
 
 export const userResolver: IResolvers = {
+  Upload: GraphQLUpload,
   Query: {
     users: async (_: any) => {
       try {
@@ -70,6 +73,7 @@ export const userResolver: IResolvers = {
         role,
         firstName,
         lastName,
+        avatar,
       }: {
         username: string;
         phone: string;
@@ -79,8 +83,10 @@ export const userResolver: IResolvers = {
         gender: string;
         firstName: string;
         lastName: string;
+        avatar?: FileUpload | null;
       }
     ): Promise<IUser> => {
+      console.log('Creating user...');
       try {
         const doesUserExist = await User.findOne({
           $or: [{ username }, { phone }],
@@ -88,6 +94,13 @@ export const userResolver: IResolvers = {
 
         if (doesUserExist) {
           throw new Error('User with this username or phone already exists.');
+        }
+
+        let base64Avatar: string | null = null;
+
+        if (avatar) {
+          const resolvedAvatar = await avatar;
+          base64Avatar = await handleImageUpload(resolvedAvatar);
         }
 
         const user = new User({
@@ -99,6 +112,7 @@ export const userResolver: IResolvers = {
           firstName,
           lastName,
           password,
+          avatar: base64Avatar,
         });
 
         await user.save();
@@ -108,7 +122,7 @@ export const userResolver: IResolvers = {
         delete userObject._id;
 
         const token = generateToken({ id: user.id, role: user.role }, '1d');
-        // console.log(userObject, 'userObject');
+
         return userObject;
       } catch (error) {
         throw new Error(`User create error: ${(error as Error).message}`);
@@ -125,6 +139,7 @@ export const userResolver: IResolvers = {
         role,
         firstName,
         lastName,
+        avatar,
       }: {
         id: string;
         username?: string;
@@ -134,6 +149,7 @@ export const userResolver: IResolvers = {
         role?: string;
         firstName?: string;
         lastName?: string;
+        avatar?: FileUpload | null;
       },
       context: any
     ): Promise<IUser> => {
@@ -156,6 +172,24 @@ export const userResolver: IResolvers = {
         updateIfExists('role', role);
         updateIfExists('firstName', firstName);
         updateIfExists('lastName', lastName);
+
+        let base64Avatar: string | null = null;
+
+        if (avatar) {
+          const resolvedAvatar = await avatar;
+          base64Avatar = await handleImageUpload(resolvedAvatar);
+        }
+
+        updateIfExists('avatar', base64Avatar);
+
+        const doesUserExist = await User.findOne({
+          $or: [{ username }, { phone }],
+          _id: { $ne: id },
+        });
+
+        if (doesUserExist) {
+          throw new Error('User with this username or phone already exists.');
+        }
 
         const updatedUser = await User.findByIdAndUpdate(id, updating, {
           new: true,
