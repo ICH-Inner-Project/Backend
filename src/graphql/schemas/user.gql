@@ -1,3 +1,5 @@
+scalar Upload
+
 type User {
   id: ID!
   username: String!
@@ -6,7 +8,8 @@ type User {
   gender: String!
   firstName: String!
   lastName: String!
-  role: String!
+  role: String
+  avatar: String
   posts: [Post]
   createdAt: String!
   updatedAt: String!
@@ -33,7 +36,8 @@ type Mutation {
     gender: String!
     firstName: String!
     lastName: String!
-    role: String!
+    role: String
+    avatar: Upload
   ): User! @requireAdmin
   updateUser(
     id: ID!
@@ -44,6 +48,7 @@ type Mutation {
     firstName: String
     lastName: String
     role: String
+    avatar: Upload
   ): User! @requireSelfOrAdmin
   deleteUser(id: ID!): Boolean! @requireSelfOrAdmin
   sendEmail(

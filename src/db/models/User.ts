@@ -1,10 +1,10 @@
-import { hashPassword } from "@utils/bcrypt";
+import { hashPassword } from '@utils/bcrypt';
 
 import { Schema, model, Document, Types } from 'mongoose';
 
 export enum Roles {
-    user = "user",
-    admin = "admin",
+  user = 'user',
+  admin = 'admin',
 }
 
 export interface IUser extends Document {
@@ -17,21 +17,26 @@ export interface IUser extends Document {
   lastName: string;
   posts: Types.ObjectId[];
   role: string;
+  avatar?: string | null;
 }
 
-const userSchema = new Schema<IUser>({
-  username: { type: String, trim: true, required: true },
-  password: { type: String, trim: true, required: true },
-  phone: { type: String, trim: true, required: true },
-  birthday: { type: Date, trim: true, required: true },
-  gender: { type: String, trim: true, required: true },
-  firstName: { type: String, trim: true, required: true },
-  lastName: { type: String, trim: true, required: true },
-  posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
-  role: { type: String, trim: true, required: true },
-}, {
+const userSchema = new Schema<IUser>(
+  {
+    username: { type: String, trim: true, required: true },
+    password: { type: String, trim: true, required: true },
+    phone: { type: String, trim: true, required: true },
+    birthday: { type: Date, trim: true, required: true },
+    gender: { type: String, trim: true, required: true },
+    firstName: { type: String, trim: true, required: true },
+    lastName: { type: String, trim: true, required: true },
+    posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
+    role: { type: String, trim: true, required: true, default: Roles.user },
+    avatar: { type: String, trim: true, default: null },
+  },
+  {
     timestamps: true,
-});
+  }
+);
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
@@ -45,4 +50,3 @@ userSchema.pre('save', async function (next) {
 });
 
 export const User = model<IUser>('UserChatty', userSchema);
-
