@@ -16,16 +16,19 @@ const postSchema = new Schema<IPost>(
     description: { type: String, trim: true, maxlength: 100, required: true },
     content: { type: String, required: true },
     image: { type: String },
-    authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    authorId: {
+      type: Schema.Types.ObjectId,
+      ref: 'UserChatty',
+      required: true,
+    },
     publishedAt: { type: Date, default: null },
   },
   {
-    timestamps: true, 
+    timestamps: true,
 
     toObject: {
       virtuals: true,
       transform(doc, ret) {
-       
         if (ret.publishedAt) {
           ret.publishedAt = format(
             new Date(ret.publishedAt),
