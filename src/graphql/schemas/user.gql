@@ -10,7 +10,7 @@ type User {
   lastName: String!
   role: String
   avatar: String
-  posts: [Post]
+  posts: [ID]
   createdAt: String!
   updatedAt: String!
 }

@@ -29,7 +29,7 @@ const userSchema = new Schema<IUser>(
     gender: { type: String, trim: true, required: true },
     firstName: { type: String, trim: true, required: true },
     lastName: { type: String, trim: true, required: true },
-    posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
+    posts: [{ type: Schema.Types.ObjectId, ref: 'PostChatty' }],
     role: { type: String, trim: true, required: true, default: Roles.user },
     avatar: { type: String, trim: true, default: null },
   },

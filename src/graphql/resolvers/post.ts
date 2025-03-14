@@ -8,6 +8,8 @@ import {
   isFuturePost,
   filterAndFormatPosts,
 } from '@utils/dateUtils';
+import { User } from '@db/models/User';
+import { GraphQLUpload, FileUpload } from 'graphql-upload-ts';
 
 interface Context {
   user?: { id: string };
@@ -39,7 +41,7 @@ interface UserPostsArgs {}
 interface CreatePostArgs {
   title: string;
   content: string;
-  image?: string;
+  image?: FileUpload | null;
   publishedAt?: string;
   description: string;
 }
@@ -53,6 +55,7 @@ interface DeletePostArgs {
 }
 
 export const postResolver: IResolvers = {
+  Upload: GraphQLUpload,
   Query: {
     async getPost(
       _: unknown,
@@ -132,7 +135,6 @@ export const postResolver: IResolvers = {
         }
       }
 
-      
       const currentDate = new Date();
 
       const posts = await Post.aggregate([
@@ -180,7 +182,12 @@ export const postResolver: IResolvers = {
       }
 
       validatePostData(title, content, description);
-      const imageUrl = image || '';
+      // const imageUrl = image || '';
+      let imageUrl: string | null = null;
+      if (image) {
+        const resolvedImage = await image;
+        imageUrl = await handleImageUpload(resolvedImage);
+      }
 
       const fullPublishedAt = publishedAt
         ? addTimeToDate(publishedAt)
@@ -194,6 +201,14 @@ export const postResolver: IResolvers = {
         publishedAt: fullPublishedAt,
         description,
       }).save();
+
+      const user = await User.findByIdAndUpdate(
+        context.user.id,
+        { $push: { posts: post._id } },
+        { new: true }
+      );
+
+      console.log(user, 'user');
 
       return post.toObject();
     },
@@ -212,7 +227,12 @@ export const postResolver: IResolvers = {
 
       validatePostData(title, content, description);
 
-      const imageUrl = image || post.image;
+      let imageUrl: string | null = null;
+      if (image) {
+        const resolvedImage = await image;
+        imageUrl = await handleImageUpload(resolvedImage);
+      }
+
       const fullPublishedAt = publishedAt
         ? addTimeToDate(publishedAt)
         : post.publishedAt;
@@ -244,6 +264,12 @@ export const postResolver: IResolvers = {
       const post = await Post.findById(id);
       if (!post || post.authorId.toString() !== context.user.id) {
         throw new Error('Permission denied');
+      }
+
+      const user = await User.findById(context.user.id);
+      if (user) {
+        user.posts = user.posts.filter((postId) => postId.toString() !== id);
+        await user.save();
       }
 
       await Post.findByIdAndDelete(id);
