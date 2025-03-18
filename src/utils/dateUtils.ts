@@ -3,23 +3,10 @@ import { IPost } from '@db/models/Post';
 export function addTimeToDate(date: string | null): Date | null {
   if (!date) return null;
 
-  const [year, month, day] = date.split('-').map(Number);
-
-  if (isNaN(month) || isNaN(day) || isNaN(year)) {
-    throw new Error('Invalid date format');
-  }
-
-  const parsedDate = new Date(year, month - 1, day);
-  if (isNaN(parsedDate.getTime())) {
-    throw new Error('Invalid date format');
-  }
-
+  const parsedDate = new Date(date);
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  parsedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
-
-  if (parsedDate < today) {
+  if (parsedDate.getTime() < now.getTime()) {
     throw new Error('Published date cannot be in the past');
   }
 
@@ -27,10 +14,10 @@ export function addTimeToDate(date: string | null): Date | null {
 }
 
 export function isFuturePost(publishedAt?: string): boolean {
-  if (!publishedAt) return false; 
+  if (!publishedAt) return false;
 
   const currentDate = new Date();
-  const postDate = parseISO(publishedAt); 
+  const postDate = parseISO(publishedAt);
 
   return isAfter(postDate, currentDate);
 }
