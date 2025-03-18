@@ -180,9 +180,8 @@ export const postResolver: IResolvers = {
       if (!context.user || !context.user.id) {
         throw new Error('Unauthorized');
       }
-
+      console.log(publishedAt, 'publishedAt');
       validatePostData(title, content, description);
-      // const imageUrl = image || '';
       let imageUrl: string | null = null;
       if (image) {
         const resolvedImage = await image;
