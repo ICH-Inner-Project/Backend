@@ -5,6 +5,8 @@ export function addTimeToDate(date: string | null): Date | null {
 
   const parsedDate = new Date(date);
   const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  parsedDate.setUTCHours(0, 0, 0, 0);
 
   if (parsedDate.getTime() < now.getTime()) {
     throw new Error('Published date cannot be in the past');
