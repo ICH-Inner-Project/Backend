@@ -99,6 +99,9 @@ export const postResolver: IResolvers = {
         filter.authorId = { $ne: context.user.id }; // Исключить посты текущего пользователя
       }
 
+      const currentDate = new Date();
+      filter.publishedAt = { $lte: currentDate };
+
       const posts = await Post.find(filter)
         .sort(sort === 'new' ? { createdAt: -1 } : { createdAt: 1 })
         .skip(offset)
