@@ -14,6 +14,5 @@ COPY .env .env
 
 # Указываем порт и команду запуска
 EXPOSE 3333
-CMD ["npm", "run", "build"]
-CMD ["npm", "run", "prod"]
+CMD ["npm", "run", "dev"]
 
