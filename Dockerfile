@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Копируем package.json и устанавливаем зависимости
 COPY package.json package-lock.json ./
+RUN npm install -g nodemon
 RUN npm install --production
 
 # Копируем исходный код и .env файл
