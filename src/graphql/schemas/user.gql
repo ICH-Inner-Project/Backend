@@ -1,0 +1,64 @@
+scalar Upload
+
+type User {
+  id: ID!
+  username: String!
+  phone: String!
+  birthday: String!
+  gender: String!
+  firstName: String!
+  lastName: String!
+  role: String
+  avatar: String
+  posts: [ID]
+  createdAt: String!
+  updatedAt: String!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type Query {
+  users: [User!]! @requireAuth
+  user(id: ID!): User @requireAuth
+  me: User @requireAuth
+}
+
+type Mutation {
+  login(username: String!, password: String!): AuthPayload!
+  createUser(
+    username: String!
+    password: String!
+    phone: String!
+    birthday: String!
+    gender: String!
+    firstName: String!
+    lastName: String!
+    role: String
+    avatar: Upload
+  ): User! @requireAdmin
+  updateUser(
+    id: ID!
+    username: String
+    phone: String
+    birthday: String
+    gender: String
+    firstName: String
+    lastName: String
+    role: String
+    avatar: Upload
+  ): User! @requireSelfOrAdmin
+  deleteUser(id: ID!): Boolean! @requireSelfOrAdmin
+  sendEmail(
+    from: String!
+    to: String!
+    subject: String!
+    body: String!
+  ): Boolean! @requireAuth
+}
+
+directive @requireAdmin on FIELD_DEFINITION
+directive @requireAuth on FIELD_DEFINITION
+directive @requireSelfOrAdmin on FIELD_DEFINITION
