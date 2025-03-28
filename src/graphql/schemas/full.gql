@@ -1,0 +1,104 @@
+scalar Upload
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  description: String!
+  image: String
+  authorId: ID!
+  createdAt: String!
+  updatedAt: String!
+  publishedAt: String
+}
+
+type User {
+  id: ID!
+  username: String!
+  phone: String!
+  birthday: String!
+  gender: String!
+  firstName: String!
+  lastName: String!
+  role: String
+  avatar: String
+  posts: [ID]
+  createdAt: String!
+  updatedAt: String!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type Query {
+  getPost(id: ID!): Post
+  listPosts(
+    limit: Int
+    offset: Int
+    onlyMine: Boolean
+    excludeMine: Boolean
+    sort: String
+  ): [Post!]!
+  randomPosts(n: Int!, onlyMine: Boolean): [Post!]!
+  searchPosts(query: String!): [Post!]!
+  userPosts(userId: ID!): [Post!]!
+
+  users: [User!]! @requireAuth
+  user(id: ID!): User @requireAuth
+  me: User @requireAuth
+}
+
+type Mutation {
+  createPost(
+    title: String!
+    content: String!
+    description: String!
+    publishedAt: String
+    image: Upload
+  ): Post!
+  updatePost(
+    id: ID!
+    title: String
+    content: String
+    description: String
+    publishedAt: String
+    image: Upload
+  ): Post!
+  deletePost(id: ID!): Boolean!
+
+  login(username: String!, password: String!): AuthPayload!
+  createUser(
+    username: String!
+    password: String!
+    phone: String!
+    birthday: String!
+    gender: String!
+    firstName: String!
+    lastName: String!
+    role: String
+    avatar: Upload
+  ): User! @requireAdmin
+  updateUser(
+    id: ID!
+    username: String
+    phone: String
+    birthday: String
+    gender: String
+    firstName: String
+    lastName: String
+    role: String
+    avatar: Upload
+  ): User! @requireSelfOrAdmin
+  deleteUser(id: ID!): Boolean! @requireSelfOrAdmin
+  sendEmail(
+    from: String!
+    to: String!
+    subject: String!
+    body: String!
+  ): Boolean! @requireAuth
+}
+
+directive @requireAdmin on FIELD_DEFINITION
+directive @requireAuth on FIELD_DEFINITION
+directive @requireSelfOrAdmin on FIELD_DEFINITION
